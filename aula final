@@ -1,0 +1,130 @@
+# O aluno pode escolher um dos seguintes problemas para trabalhar:
+
+
+# Análise de Vendas: Dados de vendas de uma loja, incluindo data, produto, preco, quantproduto vendida, etc.
+
+# Neste projeto, você criará a estrutura de dataset, que achar mais interessante.
+
+# CSV - EXCEL - SITE - BANCO DE DADOS...
+
+
+# RESULTADO:
+
+# 3: Estrutura do Script Principal
+
+# - coloque como titulo do projeto a pergunta relacionada ao problema 
+# - crie um interface grafica
+# - nos comentários insira uma possível solução a partir dos dados extraidos.
+# - crie um interface
+# - utilize graficos
+# - suba para o github
+# - cole o link aqui
+
+
+import tkinter as tk
+from tkinter import messagebox
+import sqlite3
+import matplotlib.pyplot as plt
+
+# Conectar ao banco de dados (será criado se não existir)
+conexao=sqlite3.connect('analise_de_dados_vendas.db')
+cursor=conexao.cursor()
+
+# Criar a tabela se não existir
+cursor.execute('''
+            CREATE TABLE IF NOT EXISTS vendas(
+            data TEXT NOT NULL,  
+            produto TEXT NOT NULL,
+            preco FLOATING NOT NULL,
+            qtdvendidas INTEGER NOT NULL
+            )
+''')
+
+
+conexao.commit()
+
+
+#criar a estrutura que mostrara o banco de dados
+
+def inserir_dados():
+    data=entrada_data.get()
+    produto=entrada_produto.get()
+    preco=entrada_preco.get()
+    qtdvendidas=entrada_qtdvendidas.get()
+
+    if data and produto and preco:
+        cursor.execute('''
+            INSERT INTO vendas(data,produto,preco,qtdvendidas)
+            values(?,?,?,?)
+            ''',(data,produto,float(preco),int(qtdvendidas))
+
+        )
+        
+        conexao.commit()
+        
+        messagebox.showinfo('showinfo','Dados Inseridos com sucesso')
+        entrada_data.delete(0,tk.END)
+        entrada_produto.delete(0,tk.END)
+        entrada_preco.delete(0,tk.END)
+        entrada_qtdvendidas.delete(0,tk.END)
+    
+    else:
+        messagebox.showwarning('showwarning','Dados inseridos erroneamente')
+
+# Função para exibir dados em um gráfico
+def exibir_grafico():
+    cursor.execute('SELECT data, produto FROM vendas')
+    dados = cursor.fetchall()
+    
+    if dados:
+        data = [dado[0] for dado in dados]
+        produtos = [dado[1] for dado in dados]
+
+        plt.figure(figsize=(10, 5))
+        plt.bar(data, produtos, color='#0256FF')
+        plt.xlabel('Data')
+        plt.ylabel('Produto')
+        plt.title('Ánalise de Vendas')
+        plt.show()
+    else:
+        messagebox.showwarning('showwarning', "Nenhum dado encontrado para exibir.")
+
+        
+# Criar a janela principal
+janela = tk.Tk()
+janela.title("Cadastro de Produtos")
+
+# Rótulos e campos de entrada
+tk.Label(janela, text="Data: ").grid(row=0, column=0, padx=2, pady=4)
+entrada_data = tk.Entry(janela)
+entrada_data.grid(row=0, column=1, padx=6, pady=5)
+
+tk.Label(janela, text="Produto: ").grid(row=1, column=0, padx=2, pady=4)
+entrada_produto = tk.Entry(janela)
+entrada_produto.grid(row=1, column=1, padx=6, pady=5)
+
+tk.Label(janela, text="Preço (R$): ").grid(row=2, column=0, padx=2, pady=4)
+entrada_preco = tk.Entry(janela)
+entrada_preco.grid(row=2, column=1, padx=6, pady=5)
+
+tk.Label(janela, text="Quantidade vendida: ").grid(row=3, column=0, padx=2, pady=4)
+entrada_qtdvendidas = tk.Entry(janela)
+entrada_qtdvendidas.grid(row=3, column=1, padx=2, pady=4)
+
+
+
+# Botões
+btn_inserir = tk.Button(janela, text="Inserir Dados", command=inserir_dados)
+btn_inserir.grid(row=5, column=0, columnspan=2, pady=5)
+
+btn_grafico = tk.Button(janela, text="Exibir Gráfico", command=exibir_grafico)
+btn_grafico.grid(row=6, column=0, columnspan=2, pady=5)
+
+btn_fechar = tk.Button(janela, text="Fechar", command=janela.destroy)
+btn_fechar.grid(row=7, column=0, columnspan=2, pady=5)
+
+# Iniciar o loop da aplicação
+janela.mainloop()
+
+# Fechar a conexão ao banco de dados quando a janela for fechada
+conexao.close()
